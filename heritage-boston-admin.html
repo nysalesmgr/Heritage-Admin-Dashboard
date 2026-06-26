@@ -766,11 +766,11 @@ function editCell(td, ref, field, type){
 
   if(type==='season'){
     input = document.createElement('select');
-    const opts = ['—','Summer','Fall','Sub-License'];
+    const opts = currentProperty==='boston' ? ['—','9 months','12 months'] : ['—','Summer','Fall','Sub-License'];
     opts.forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; if(o===cur) op.selected=true; input.appendChild(op); });
   } else if(type==='student'){
     input = document.createElement('select');
-    const opts = ['—','Freshmen','Inbound/ Dorm','Inbound/ Luxury Condo','Inbound/ American, Greencard','NYSE'];
+    const opts = ['—','Freshmen','Inbound/ Dorm','Inbound/ Luxury Condo','Inbound/ American, Greencard'];
     opts.forEach(o=>{ const op=document.createElement('option'); op.value=o; op.textContent=o; if(o===cur) op.selected=true; input.appendChild(op); });
   } else {
     input = document.createElement('input');
