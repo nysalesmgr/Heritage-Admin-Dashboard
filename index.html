@@ -43,7 +43,11 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;color:var(--
 .pb{background:#3a4480;border:none;border-radius:8px;color:#FFF;font:400 17px 'Inter',sans-serif;padding:15px;cursor:pointer;transition:background .1s}
 .pb:hover{background:#4a55a0}.pb:active{background:var(--coral-dim)}
 .pb.zero{grid-column:2}.pb.del{background:transparent;color:#6a75a8;font-size:13px}.pb.del:hover{color:#FFF}
-.l-err{color:var(--coral);font-size:12px;margin-top:12px;min-height:16px}
+.staff-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.sb-btn{background:#3a4480;border:none;border-radius:8px;color:#FFF;font:500 14px 'Inter',sans-serif;padding:14px;cursor:pointer;transition:background .1s;text-align:center}
+.sb-btn:hover{background:var(--coral)}
+.sb-who{font-size:12px;color:var(--sb-t);margin-bottom:16px}
+#staff-indicator{font-size:11px;color:var(--coral);margin-top:2px}
 
 /* APP */
 #app{display:none;height:100vh;overflow:hidden}
@@ -230,6 +234,23 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
   </div>
 </div>
 
+<!-- STAFF SELECTOR -->
+<div id="staff-screen" style="display:none;position:fixed;inset:0;background:#1e2847;align-items:center;justify-content:center;z-index:998;flex-direction:column">
+  <div class="lc">
+    <div class="l-brand">Heritage Collection</div>
+    <div class="l-prop">Who are you?</div>
+    <div class="sb-who">Select your name to continue</div>
+    <div class="staff-grid">
+      <button class="sb-btn" onclick="selectStaff('Kyla')">Kyla</button>
+      <button class="sb-btn" onclick="selectStaff('Dianna')">Dianna</button>
+      <button class="sb-btn" onclick="selectStaff('Charlotte')">Charlotte</button>
+      <button class="sb-btn" onclick="selectStaff('Will')">Will</button>
+      <button class="sb-btn" onclick="selectStaff('Jonia')">Jonia</button>
+      <button class="sb-btn" onclick="selectStaff('Karen')">Karen</button>
+    </div>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app">
   <aside id="sidebar">
@@ -254,7 +275,10 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
       <div class="sb-row"><span class="sb-sn">Pending review</span><span class="sb-sv" id="sb-pend">—</span></div>
       <div class="sb-row"><span class="sb-sn">Approved</span><span class="sb-sv" id="sb-appr">—</span></div>
     </div>
-    <div class="sb-footer"><div class="sb-logout" onclick="logout()"><span>⏏</span> Lock Dashboard</div></div>
+    <div class="sb-footer">
+      <div style="font-size:11px;color:var(--coral);margin-bottom:6px" id="staff-indicator"></div>
+      <div class="sb-logout" onclick="logout()"><span>⏏</span> Lock Dashboard</div>
+    </div>
   </aside>
 
   <main id="main">
@@ -442,8 +466,6 @@ const SHEET_URLS = {
 
 const PIN_KEY     = 'hc_admin_pin';
 const DEFAULT_PIN = '0922';
-const NOTES_KEY   = 'hc_notes';
-const HISTORY_KEY = 'hc_history';
 const NY_STATUS_KEY = 'hc_ny_status';
 
 // ── STATE ────────────────────────────────────────────────
@@ -451,12 +473,15 @@ let apps = [];
 let selectedRef = null;
 let pinBuffer = '';
 let currentProperty = 'boston';
+let currentStaff = sessionStorage.getItem('hc_staff') || '';
 
 // ── BOOT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('overview-date').textContent =
     new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 });
+
+const STAFF_LIST = ['Kyla','Dianna','Charlotte','Will','Jonia','Karen'];
 
 // ── PIN ──────────────────────────────────────────────────
 function getPin(){ return localStorage.getItem(PIN_KEY) || DEFAULT_PIN; }
@@ -466,8 +491,7 @@ function pinKey(d){
   if(pinBuffer.length === 4){
     if(pinBuffer === getPin()){
       document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app').classList.add('ready');
-      loadApps();
+      document.getElementById('staff-screen').style.display = 'flex';
     } else {
       document.getElementById('pin-err').textContent = 'Incorrect PIN.';
       setTimeout(()=>{ pinBuffer=''; updateDots(); document.getElementById('pin-err').textContent=''; }, 800);
@@ -481,10 +505,21 @@ document.addEventListener('keydown', e => {
   if(/^\d$/.test(e.key)) pinKey(e.key);
   if(e.key === 'Backspace') pinDel();
 });
+
+function selectStaff(name){
+  currentStaff = name;
+  sessionStorage.setItem('hc_staff', name);
+  document.getElementById('staff-screen').style.display = 'none';
+  document.getElementById('app').classList.add('ready');
+  document.getElementById('staff-indicator').textContent = '👤 ' + name;
+  loadApps();
+}
+
 function logout(){
   document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('staff-screen').style.display = 'none';
   document.getElementById('app').classList.remove('ready');
-  pinBuffer=''; updateDots(); closePanel();
+  pinBuffer=''; currentStaff=''; updateDots(); closePanel();
 }
 function changePin(){
   const np = prompt('Enter new 4-digit PIN:');
@@ -644,10 +679,33 @@ function setNYStatus(ref, status){
   try { const s = JSON.parse(localStorage.getItem(NY_STATUS_KEY)||'{}'); s[ref]=status; localStorage.setItem(NY_STATUS_KEY, JSON.stringify(s)); } catch(e){}
 }
 
-// ── NOTES & HISTORY ───────────────────────────────────────
-function getNotes(){ try{ return JSON.parse(localStorage.getItem(NOTES_KEY)||'{}'); }catch(e){ return {}; } }
-function getHistory(){ try{ return JSON.parse(localStorage.getItem(HISTORY_KEY)||'{}'); }catch(e){ return {}; } }
-function saveHistoryEntry(ref, status, type){ const h=getHistory(); if(!h[ref]) h[ref]=[]; h[ref].push({status, changedAt:new Date().toISOString(), type:type||statusClass(status)}); localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); }
+// ── NOTES & HISTORY (Supabase) ────────────────────────────
+async function fetchNotes(ref){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/staff_notes?ref_number=eq.${encodeURIComponent(ref)}&order=created_at.desc&limit=1`, { headers: SB_HEADERS });
+    if(res.ok){ const d=await res.json(); return d.length ? d[0].note_text : ''; }
+  }catch(e){}
+  return '';
+}
+async function insertNote(ref, text){
+  await fetch(`${SUPABASE_URL}/rest/v1/staff_notes`, {
+    method:'POST', headers:{...SB_HEADERS,'Prefer':'return=minimal'},
+    body: JSON.stringify({ ref_number:ref, note_text:text, staff_name:currentStaff, property:currentProperty })
+  });
+}
+async function fetchHistory(ref){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/staff_history?ref_number=eq.${encodeURIComponent(ref)}&order=created_at.asc`, { headers: SB_HEADERS });
+    if(res.ok) return await res.json();
+  }catch(e){}
+  return [];
+}
+async function insertHistory(ref, type, content){
+  await fetch(`${SUPABASE_URL}/rest/v1/staff_history`, {
+    method:'POST', headers:{...SB_HEADERS,'Prefer':'return=minimal'},
+    body: JSON.stringify({ ref_number:ref, entry_type:type, content, staff_name:currentStaff, property:currentProperty })
+  });
+}
 
 // ── NAVIGATION ────────────────────────────────────────────
 function showView(v){
@@ -684,9 +742,9 @@ function refreshAll(){
 }
 
 function getAgreementDate(ref){
-  const hs = getHistory()[ref] || [];
-  const entry = [...hs].reverse().find(h=>h.status==='Agreement Issued');
-  return entry ? entry.changedAt : null;
+  // Check if manually set in editable data
+  const stored = getNYData(ref).agr_date;
+  return stored || null;
 }
 
 function getPaymentDueDate(ref){
@@ -936,19 +994,31 @@ function openPanel(ref){
   }
   document.getElementById('t-docs-list').innerHTML = docHtml;
 
-  // Notes & History
-  const notes = getNotes();
-  document.getElementById('notes-text').value = notes[ref]||'';
-  const history = getHistory();
-  const hs = history[ref] || [];
-  const allEntries = hs.length ? hs : [{ status: a.status||'Pending Review', changedAt: a.created_at||'', type: statusClass(a.status||'Pending Review') }];
-  document.getElementById('tl-list').innerHTML = allEntries.map(h=>`
-    <div class="tl-item"><div class="tl-dot ${h.type||statusClass(h.status)}"></div>
-    <div><div class="tl-t">${h.status}</div><div class="tl-d">${fmtDateTime(h.changedAt)}</div></div></div>`).join('');
+  // Notes & History — load from Supabase
+  document.getElementById('notes-text').value = 'Loading…';
+  document.getElementById('tl-list').innerHTML = '<div style="color:var(--t3);font-size:12px">Loading…</div>';
 
   switchTab('licensee');
   document.getElementById('backdrop').classList.add('on');
   document.getElementById('panel').classList.add('on');
+
+  // Async load
+  Promise.all([fetchNotes(ref), fetchHistory(ref)]).then(([noteText, histEntries])=>{
+    document.getElementById('notes-text').value = noteText;
+    const tl = document.getElementById('tl-list');
+    if(!histEntries.length){
+      tl.innerHTML = `<div class="tl-item"><div class="tl-dot pending"></div><div><div class="tl-t">Pending Review</div><div class="tl-d">${fmtDateTime(a.created_at)}</div></div></div>`;
+    } else {
+      tl.innerHTML = histEntries.map(h=>`
+        <div class="tl-item">
+          <div class="tl-dot ${h.entry_type==='note'?'note':statusClass(h.content)}"></div>
+          <div>
+            <div class="tl-t">${esc(h.content)}</div>
+            <div class="tl-d">${fmtDateTime(h.created_at)} · <strong>${esc(h.staff_name)}</strong></div>
+          </div>
+        </div>`).join('');
+    }
+  });
 }
 
 function docRow(label, url){
@@ -975,38 +1045,37 @@ async function setStatus(ref, newStatus){
   if(!a) return;
 
   if(a._source === 'Booking Engine'){
-    // Update Supabase
     const res = await fetch(SUPABASE_URL + '/rest/v1/applications?ref_number=eq.' + encodeURIComponent(ref), {
       method: 'PATCH', headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
       body: JSON.stringify({ status: newStatus })
     });
     if(!res.ok){ toast('Update failed — check Supabase RLS'); return; }
   } else {
-    // Update localStorage for Formsite apps
     setNYStatus(ref, newStatus);
   }
 
   a.status = newStatus;
-  saveHistoryEntry(ref, newStatus);
+  await insertHistory(ref, 'status', newStatus);
   refreshAll();
   openPanel(ref);
-  if(currentProperty==='newyork') renderFinishLine();
+  renderFinishLine();
   toast('Status → ' + newStatus + ' ✓');
 }
 
-function saveNotes(){
+async function saveNotes(){
   if(!selectedRef) return;
   const text = document.getElementById('notes-text').value.trim();
   if(!text){ toast('Note is empty'); return; }
-  const n = getNotes(); n[selectedRef] = text;
-  localStorage.setItem(NOTES_KEY, JSON.stringify(n));
-  saveHistoryEntry(selectedRef, '📝 ' + text, 'note');
-  // Refresh timeline in panel
-  const history = getHistory();
-  const hs = history[selectedRef] || [];
-  document.getElementById('tl-list').innerHTML = hs.map(h=>`
-    <div class="tl-item"><div class="tl-dot ${h.type||statusClass(h.status)}"></div>
-    <div><div class="tl-t">${h.status}</div><div class="tl-d">${fmtDateTime(h.changedAt)}</div></div></div>`).join('');
+  await insertNote(selectedRef, text);
+  await insertHistory(selectedRef, 'note', '📝 ' + text);
+  // Refresh timeline
+  const histEntries = await fetchHistory(selectedRef);
+  document.getElementById('tl-list').innerHTML = histEntries.map(h=>`
+    <div class="tl-item">
+      <div class="tl-dot ${h.entry_type==='note'?'note':statusClass(h.content)}"></div>
+      <div><div class="tl-t">${esc(h.content)}</div>
+      <div class="tl-d">${fmtDateTime(h.created_at)} · <strong>${esc(h.staff_name)}</strong></div></div>
+    </div>`).join('');
   toast('Note saved ✓');
 }
 
