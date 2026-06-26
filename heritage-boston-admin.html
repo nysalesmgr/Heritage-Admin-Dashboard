@@ -550,12 +550,7 @@ async function loadNYApps(){
   for(const [type, url] of Object.entries(SHEET_URLS.newyork)){
     try {
       const rows = await fetchSheet(url);
-      console.log(`NY ${type}: fetched ${rows.length} rows`);
-      rows.forEach(r => {
-        const normalized = normalizeFormsite(r, type==='domestic'?'Domestic':'International', 'newyork');
-        console.log(`NY ${type} row → ref:${normalized.ref_number} name:${normalized.first_name} ${normalized.last_name} email:${normalized.email}`);
-        apps.push(normalized);
-      });
+      rows.forEach(r => apps.push(normalizeFormsite(r, type==='domestic'?'Domestic':'International', 'newyork')));
     } catch(e){ console.warn('Sheet fetch error (ny '+type+'):', e); }
   }
   apps.sort((a,b) => new Date(b.created_at||0) - new Date(a.created_at||0));
@@ -567,7 +562,6 @@ async function fetchSheet(url){
   const res = await fetch(proxyUrl);
   if(!res.ok) throw new Error('HTTP ' + res.status);
   const text = await res.text();
-  console.log('Sheet URL:', url.substring(0,60), '| Length:', text.length, '| Preview:', text.substring(0,150).replace(/\n/g,'↵'));
   return parseCSV(text);
 }
 
