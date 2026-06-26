@@ -823,13 +823,14 @@ function renderTable(){
   if(isNY){
     // NY columns
     document.querySelector('#view-applications thead tr').innerHTML = `
-      <th>Date of Submission</th><th>Season</th><th>Applicant</th><th>Unit</th><th>Move-in</th><th>Move-out</th>
-      <th>Monthly Rent</th><th>VMU Date</th><th>IPT Date</th><th>Student Status</th><th>Prev. Accommodation</th><th>Source</th><th>Status</th>`;
+      <th>Date of Submission</th><th>Season</th><th>Applicant</th><th>Source</th><th>Unit</th><th>Move-in</th><th>Move-out</th>
+      <th>Monthly Rent</th><th>VMU Date</th><th>IPT Date</th><th>Student Status</th><th>Prev. Accommodation</th><th>Form Source</th><th>Status</th>`;
     tbody.innerHTML = filtered.map(a=>`
       <tr>
         <td><span class="td-date">${fmtDate(a.created_at)}</span></td>
         ${nyCell(a.ref_number,'season','season')}
         <td onclick="openPanel('${esc(a.ref_number)}')" style="cursor:pointer"><div class="td-name">${esc(a.first_name||'')} ${esc(a.last_name||'')}</div><div class="td-email">${esc(a.email||'')}</div></td>
+        ${nyCell(a.ref_number,'lead_source','text')}
         ${nyCell(a.ref_number,'unit','text')}
         ${nyCell(a.ref_number,'move_in','date')}
         ${nyCell(a.ref_number,'move_out','date')}
