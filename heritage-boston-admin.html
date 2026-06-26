@@ -824,7 +824,7 @@ function renderTable(){
     // NY columns
     document.querySelector('#view-applications thead tr').innerHTML = `
       <th>Date of Submission</th><th>Season</th><th>Applicant</th><th>Source</th><th>Unit</th><th>Move-in</th><th>Move-out</th>
-      <th>Monthly Rent</th><th>VMU Date</th><th>IPT Date</th><th>Student Status</th><th>Prev. Accommodation</th><th>Form Source</th><th>Status</th>`;
+      <th>Monthly Rent</th><th>VMU Date</th><th>IPT Date</th><th>Student Status</th><th>Prev. Accommodation</th><th>Status</th>`;
     tbody.innerHTML = filtered.map(a=>`
       <tr>
         <td><span class="td-date">${fmtDate(a.created_at)}</span></td>
@@ -839,7 +839,6 @@ function renderTable(){
         ${nyCell(a.ref_number,'ipt','date')}
         ${nyCell(a.ref_number,'student_status','student')}
         ${nyCell(a.ref_number,'prev_accommodation','text')}
-        <td>${srcBadge(a._source)}</td>
         <td onclick="openPanel('${esc(a.ref_number)}')" style="cursor:pointer">${badge(a.status)}</td>
       </tr>`).join('');
   } else {
@@ -1064,7 +1063,17 @@ function srcBadge(s){
   const cls = s==='Booking Engine' ? 'src-supabase' : s==='International' ? 'src-international' : 'src-domestic';
   return `<span class="src-badge ${cls}">${s||'—'}</span>`;
 }
-function fmtDate(d){ if(!d||d==='—') return '—'; try{ return new Date(d+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }catch(e){ return d; } }
+function fmtDate(d){
+  if(!d||d==='—') return '—';
+  try{
+    let date;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(d)) date = new Date(d+'T12:00:00');
+    else if(d.includes(' ')&&d.length>10) date = new Date(d.replace(' ','T'));
+    else date = new Date(d);
+    if(isNaN(date.getTime())) return d;
+    return date.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  }catch(e){ return d; }
+}
 function fmtDateTime(d){ if(!d) return '—'; try{ return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return d; } }
 function esc(s){ return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
 let toastTimer;
