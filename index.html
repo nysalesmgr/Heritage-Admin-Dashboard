@@ -466,7 +466,6 @@ const SHEET_URLS = {
 
 const PIN_KEY     = 'hc_admin_pin';
 const DEFAULT_PIN = '8181';
-const NY_STATUS_KEY = 'hc_ny_status';
 
 // ── STATE ────────────────────────────────────────────────
 let apps = [];
@@ -474,6 +473,7 @@ let selectedRef = null;
 let pinBuffer = '';
 let currentProperty = 'boston';
 let currentStaff = sessionStorage.getItem('hc_staff') || '';
+let editableCache = {};
 
 // ── BOOT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -546,6 +546,7 @@ function switchProperty(p){
 async function loadApps(showMsg){
   if(showMsg) toast('Refreshing…');
   apps = [];
+  await loadEditableData();
   if(currentProperty === 'boston'){
     await loadBostonApps();
   } else {
@@ -633,7 +634,6 @@ function normalizeFormsite(row, source, property){
 
   const ref = col(['Reference #', 'Reference#']);
   const nyStatus = getNYStatus(ref);
-
   return {
     ref_number:    ref,
     created_at:    col(['Date']) || new Date().toISOString(),
@@ -673,10 +673,10 @@ function normalizeFormsite(row, source, property){
 
 // ── NY STATUS (localStorage) ──────────────────────────────
 function getNYStatus(ref){
-  try { return (JSON.parse(localStorage.getItem(NY_STATUS_KEY)||'{}'))[ref] || 'Pending Review'; } catch(e){ return 'Pending Review'; }
+  return editableCache[ref]?.formsite_status || 'Pending Review';
 }
 function setNYStatus(ref, status){
-  try { const s = JSON.parse(localStorage.getItem(NY_STATUS_KEY)||'{}'); s[ref]=status; localStorage.setItem(NY_STATUS_KEY, JSON.stringify(s)); } catch(e){}
+  setNYData(ref, { formsite_status: status });
 }
 
 // ── NOTES & HISTORY (Supabase) ────────────────────────────
@@ -810,9 +810,25 @@ function renderRecent(){
     </tr>`).join('');
 }
 
-// ── NY EDITABLE DATA ──────────────────────────────────────
-function getNYData(ref){ try{ return (JSON.parse(localStorage.getItem('hc_ny_data')||'{}'))[ref]||{}; }catch(e){ return {}; } }
-function setNYData(ref, data){ try{ const d=JSON.parse(localStorage.getItem('hc_ny_data')||'{}'); d[ref]={...(d[ref]||{}),...data}; localStorage.setItem('hc_ny_data',JSON.stringify(d)); }catch(e){} }
+// ── EDITABLE DATA (Supabase) ──────────────────────────────
+function getNYData(ref){ return editableCache[ref] || {}; }
+
+function setNYData(ref, data){
+  editableCache[ref] = { ...(editableCache[ref]||{}), ...data };
+  const payload = { ...editableCache[ref], ref_number: ref, property: currentProperty, updated_at: new Date().toISOString() };
+  fetch(`${SUPABASE_URL}/rest/v1/editable_data`, {
+    method: 'POST',
+    headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(payload)
+  }).catch(e => console.warn('Editable data save error:', e));
+}
+
+async function loadEditableData(){
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/editable_data?select=*`, { headers: SB_HEADERS });
+    if(res.ok){ const rows=await res.json(); editableCache={}; rows.forEach(r=>{ editableCache[r.ref_number]=r; }); }
+  }catch(e){ console.warn('Editable data fetch error:', e); }
+}
 
 function editCell(td, ref, field, type){
   const cur = getNYData(ref)[field]||'';
@@ -1056,6 +1072,20 @@ async function setStatus(ref, newStatus){
 
   a.status = newStatus;
   await insertHistory(ref, 'status', newStatus);
+
+  // Auto-populate Agreement Issued date and Payment Due (T+2) if not already set
+  if(newStatus === 'Agreement Issued'){
+    const existing = editableCache[ref] || {};
+    if(!existing.agr_date){
+      const today = new Date();
+      const due = new Date(today); due.setDate(due.getDate()+2);
+      setNYData(ref, {
+        agr_date: today.toISOString().slice(0,10),
+        payment_due: due.toISOString().slice(0,10)
+      });
+    }
+  }
+
   refreshAll();
   openPanel(ref);
   renderFinishLine();
