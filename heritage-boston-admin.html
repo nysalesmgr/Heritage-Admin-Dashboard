@@ -558,7 +558,8 @@ async function loadNYApps(){
 
 // ── FETCH GOOGLE SHEET CSV ────────────────────────────────
 async function fetchSheet(url){
-  const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+  const bustUrl = url + (url.includes('?') ? '&' : '?') + '_=' + Date.now();
+  const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(bustUrl);
   const res = await fetch(proxyUrl);
   if(!res.ok) throw new Error('HTTP ' + res.status);
   const text = await res.text();
