@@ -567,6 +567,7 @@ async function fetchSheet(url){
   const res = await fetch(proxyUrl);
   if(!res.ok) throw new Error('HTTP ' + res.status);
   const text = await res.text();
+  console.log('Sheet URL:', url.substring(0,60), '| Length:', text.length, '| Preview:', text.substring(0,150).replace(/\n/g,'↵'));
   return parseCSV(text);
 }
 
