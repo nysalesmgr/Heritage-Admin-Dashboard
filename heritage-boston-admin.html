@@ -777,6 +777,8 @@ function setNYData(ref, data){ try{ const d=JSON.parse(localStorage.getItem('hc_
 function editCell(td, ref, field, type){
   const cur = getNYData(ref)[field]||'';
   let input;
+  const isSelect = type==='season' || type==='student';
+
   if(type==='season'){
     input = document.createElement('select');
     const opts = ['—','Summer','Fall','Sub-License'];
@@ -791,11 +793,26 @@ function editCell(td, ref, field, type){
     input.value = cur;
     input.placeholder = type==='date' ? 'YYYY-MM-DD' : 'Enter…';
   }
+
   input.style.cssText='width:100%;border:1.5px solid var(--coral);border-radius:4px;padding:3px 6px;font-size:12px;font-family:Inter,sans-serif;outline:none';
+  input.onclick = e => e.stopPropagation();
   td.innerHTML=''; td.appendChild(input); input.focus();
-  const save=()=>{ const val=input.value; setNYData(ref,{[field]:val}); td.innerHTML=`<span class="cell-val${!val||val==='—'?' empty':''}">${val&&val!=='—'?val:'—'}</span>`; };
-  input.onblur=save;
-  input.onkeydown=(e)=>{ if(e.key==='Enter') input.blur(); if(e.key==='Escape'){ td.innerHTML=`<span class="cell-val${!cur||cur==='—'?' empty':''}">${cur&&cur!=='—'?cur:'—'}</span>`; } };
+
+  const save = () => {
+    const val = input.value;
+    setNYData(ref,{[field]:val});
+    td.innerHTML=`<span class="cell-val${!val||val==='—'?' empty':''}">${val&&val!=='—'?val:'—'}</span>`;
+  };
+
+  if(isSelect){
+    input.onchange = save;
+  } else {
+    input.onblur = save;
+    input.onkeydown = e => {
+      if(e.key==='Enter') input.blur();
+      if(e.key==='Escape'){ td.innerHTML=`<span class="cell-val${!cur||cur==='—'?' empty':''}">${cur&&cur!=='—'?cur:'—'}</span>`; }
+    };
+  }
 }
 
 function nyCell(ref, field, type){ const val=getNYData(ref)[field]||''; return `<td class="editable-cell" onclick="editCell(this,'${esc(ref)}','${field}','${type}')"><span class="cell-val${!val||val==='—'?' empty':''}">${val&&val!=='—'?val:'—'}</span></td>`; }
