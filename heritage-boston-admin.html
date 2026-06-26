@@ -550,7 +550,12 @@ async function loadNYApps(){
   for(const [type, url] of Object.entries(SHEET_URLS.newyork)){
     try {
       const rows = await fetchSheet(url);
-      rows.forEach(r => apps.push(normalizeFormsite(r, type==='domestic'?'Domestic':'International', 'newyork')));
+      console.log(`NY ${type}: fetched ${rows.length} rows`);
+      rows.forEach(r => {
+        const normalized = normalizeFormsite(r, type==='domestic'?'Domestic':'International', 'newyork');
+        console.log(`NY ${type} row → ref:${normalized.ref_number} name:${normalized.first_name} ${normalized.last_name} email:${normalized.email}`);
+        apps.push(normalized);
+      });
     } catch(e){ console.warn('Sheet fetch error (ny '+type+'):', e); }
   }
   apps.sort((a,b) => new Date(b.created_at||0) - new Date(a.created_at||0));
