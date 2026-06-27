@@ -814,6 +814,7 @@ function renderRecent(){
 function getNYData(ref){ return editableCache[ref] || {}; }
 
 function setNYData(ref, data){
+  console.log('setNYData called:', ref, data);
   editableCache[ref] = { ...(editableCache[ref]||{}), ...data };
   // Only send known columns to Supabase
   const allowed = ['ref_number','property','unit','move_in','move_out','monthly_rent','vmu','ipt','student_status','prev_accommodation','season','lead_source','reservation_no','agr_date','payment_due','remarks','formsite_status','updated_at'];
