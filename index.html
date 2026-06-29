@@ -339,8 +339,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
             <select class="fs" id="status-filter" onchange="renderTable()">
               <option value="all">All statuses</option>
               <option value="Pending Review">Pending Review</option>
-              <option value="Pending VMU">Pending VMU</option>
-              <option value="Pending IPT">Pending IPT</option>
+              <option value="Pending VMU/IPT">Pending VMU/IPT</option>
               <option value="Recap Sent">Recap Sent</option>
               <option value="Agreement Issued">Agreement Issued</option>
               <option value="To Drop">To Drop</option>
@@ -734,7 +733,7 @@ function showView(v){
 // ── REFRESH ───────────────────────────────────────────────
 function refreshAll(){
   const total = apps.length;
-  const pend  = apps.filter(a=>['Pending Review','Pending VMU','Pending IPT','Recap Sent'].includes(a.status)).length;
+  const pend  = apps.filter(a=>['Pending Review','Pending VMU/IPT','Recap Sent'].includes(a.status)).length;
   const appr  = apps.filter(a=>a.status==='Agreement Issued').length;
   const rej   = apps.filter(a=>['To Drop','Drop Out ($500)'].includes(a.status)).length;
 
@@ -1073,7 +1072,7 @@ function renderTable(){
   if(srt==='date-desc') filtered.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
   else if(srt==='date-asc') filtered.sort((a,b)=>new Date(a.created_at||0)-new Date(b.created_at||0));
   else if(srt==='name-asc') filtered.sort((a,b)=>(a.last_name||'').localeCompare(b.last_name||''));
-  else if(srt==='status'){ const o={'Pending Review':0,'Pending VMU':1,'Pending IPT':2,'Recap Sent':3,'Agreement Issued':4,'Revived':5,'To Drop':6,'Drop Out ($500)':7,'Payment Received/Finalized':8}; filtered.sort((a,b)=>(o[a.status]||9)-(o[b.status]||9)); }
+  else if(srt==='status'){ const o={'Pending Review':0,'Pending VMU/IPT':1,'Recap Sent':3,'Agreement Issued':4,'Revived':5,'To Drop':6,'Drop Out ($500)':7,'Payment Received/Finalized':8}; filtered.sort((a,b)=>(o[a.status]||9)-(o[b.status]||9)); }
 
   document.getElementById('filter-count').textContent = filtered.length + ' of ' + apps.length;
   if(!filtered.length){ tbody.innerHTML=`<tr class="loading-row"><td colspan="14">No applications match your filters</td></tr>`; return; }
@@ -1116,8 +1115,7 @@ function openPanel(ref){
   // Action buttons
   const acts = document.getElementById('pan-acts');
   acts.innerHTML = `
-    ${a.status!=='Pending VMU'              ? `<button class="btn" style="background:var(--vmu-bg);color:var(--vmu)" onclick="setStatus('${esc(ref)}','Pending VMU')">Pending VMU</button>` : ''}
-    ${a.status!=='Pending IPT'              ? `<button class="btn" style="background:var(--ipt-bg);color:var(--ipt)" onclick="setStatus('${esc(ref)}','Pending IPT')">Pending IPT</button>` : ''}
+    ${a.status!=='Pending VMU/IPT'              ? `<button class="btn" style="background:var(--vmu-bg);color:var(--vmu)" onclick="setStatus('${esc(ref)}','Pending VMU/IPT')">Pending VMU/IPT</button>` : ''}
     ${a.status!=='Recap Sent'               ? `<button class="btn" style="background:var(--recap-bg);color:var(--recap)" onclick="setStatus('${esc(ref)}','Recap Sent')">Recap Sent</button>` : ''}
     ${a.status!=='Agreement Issued'         ? `<button class="btn" style="background:var(--agr-bg);color:var(--agr)" onclick="setStatus('${esc(ref)}','Agreement Issued')">Agreement Issued</button>` : ''}
     ${a.status!=='Revived'                  ? `<button class="btn" style="background:var(--revived-bg);color:var(--revived)" onclick="setStatus('${esc(ref)}','Revived')">Revived</button>` : ''}
@@ -1323,8 +1321,8 @@ function statusClass(s){
   if(s==='Approved')          return 'approved';
   if(s==='Rejected')          return 'rejected';
   if(s==='On Hold')           return 'hold';
-  if(s==='Pending VMU')       return 'pendingvmu';
-  if(s==='Pending IPT')       return 'pendingipt';
+  if(s==='Pending VMU/IPT')       return 'pendingvmu';
+  if(s==='Pending VMU/IPT')       return 'pendingipt';
   if(s==='Recap Sent')        return 'recapsent';
   if(s==='Agreement Issued')  return 'agreementissued';
   if(s==='To Drop')           return 'todrop';
