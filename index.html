@@ -764,7 +764,7 @@ function setNYData(ref, data){
   console.log('setNYData called:', ref, data);
   editableCache[ref] = { ...(editableCache[ref]||{}), ...data };
   // Only send known columns to Supabase
-  const allowed = ['ref_number','property','unit','move_in','move_out','monthly_rent','vmu','ipt','student_status','prev_accommodation','season','lead_source','reservation_no','agr_date','payment_due','remarks','formsite_status','updated_at'];
+  const allowed = ['ref_number','property','unit','move_in','move_out','monthly_rent','incentives','vmu','ipt','student_status','prev_accommodation','season','lead_source','reservation_no','agr_date','payment_due','remarks','formsite_status','updated_at'];
   const raw = { ...editableCache[ref], ref_number: ref, property: currentProperty, updated_at: new Date().toISOString() };
   const payload = {};
   allowed.forEach(k => { if(raw[k] !== undefined) payload[k] = raw[k]; });
@@ -862,11 +862,11 @@ function renderTable(){
   else if(srt==='status'){ const o={'Pending Review':0,'Pending VMU':1,'Pending IPT':2,'Recap Sent':3,'Agreement Issued':4,'Revived':5,'To Drop':6,'Drop Out ($500)':7,'Payment Received/Finalized':8}; filtered.sort((a,b)=>(o[a.status]||9)-(o[b.status]||9)); }
 
   document.getElementById('filter-count').textContent = filtered.length + ' of ' + apps.length;
-  if(!filtered.length){ tbody.innerHTML=`<tr class="loading-row"><td colspan="13">No applications match your filters</td></tr>`; return; }
+  if(!filtered.length){ tbody.innerHTML=`<tr class="loading-row"><td colspan="14">No applications match your filters</td></tr>`; return; }
 
   document.querySelector('#view-applications thead tr').innerHTML = `
     <th>Date of Submission</th><th>Season</th><th>Applicant</th><th>Source</th><th>Unit</th><th>Move-in</th><th>Move-out</th>
-    <th>Monthly Rent</th><th>VMU Date</th><th>IPT Date</th><th>Student Status</th><th>Prev. Accommodation</th><th>Status</th>`;
+    <th>Monthly Rent</th><th>Incentives %</th><th>VMU Date</th><th>IPT Date</th><th>Student Status</th><th>Prev. Accommodation</th><th>Status</th>`;
 
   tbody.innerHTML = filtered.map(a=>`
     <tr>
@@ -878,6 +878,7 @@ function renderTable(){
       ${nyCell(a.ref_number,'move_in','date', a._source==='Booking Engine' ? a.start_date : '')}
       ${nyCell(a.ref_number,'move_out','date', a._source==='Booking Engine' ? a.end_date : '')}
       ${nyCell(a.ref_number,'monthly_rent','text', a._source==='Booking Engine' ? (a.monthly_rate||'') : '')}
+      ${nyCell(a.ref_number,'incentives','text')}
       ${nyCell(a.ref_number,'vmu','date')}
       ${nyCell(a.ref_number,'ipt','date')}
       ${nyCell(a.ref_number,'student_status','student')}
