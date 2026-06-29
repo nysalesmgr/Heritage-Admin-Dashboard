@@ -846,6 +846,8 @@ async function saveNewRenewal(){
     toast('Renewal added ✓');
   } else { toast('Error saving renewal'); }
 }
+
+function renderFinishLine(){
   const tbody = document.getElementById('finish-line-tbody');
   const agreed = apps.filter(a=>a.status==='Agreement Issued');
   if(!agreed.length){ tbody.innerHTML=`<tr class="loading-row"><td colspan="8">No agreements issued yet</td></tr>`; return; }
