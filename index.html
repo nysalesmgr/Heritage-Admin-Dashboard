@@ -26,6 +26,7 @@
   --todrop:#c04f4a;--todrop-bg:#fde8e7;
   --dropout:#7f1d1d;--dropout-bg:#fee2e2;
   --payrcvd:#1a5c3a;--payrcvd-bg:#bbf7d0;
+  --renewal:#0e7490;--renewal-bg:#cffafe;
   --revived:#6d28d9;--revived-bg:#ede9fe;
   --r:8px;
 }
@@ -138,6 +139,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 .badge.todrop{background:var(--todrop-bg);color:var(--todrop)}
 .badge.dropout{background:var(--dropout-bg);color:var(--dropout)}
 .badge.paymentreceived{background:var(--payrcvd-bg);color:var(--payrcvd)}
+.badge.renewal{background:var(--renewal-bg);color:var(--renewal)}
 .badge.revived{background:var(--revived-bg);color:var(--revived)}
 .editable-cell{cursor:pointer;position:relative}
 .editable-cell:hover .cell-val{background:var(--navy-l);border-radius:4px;padding:2px 5px}
@@ -148,7 +150,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
 .tl-dot.pendingvmu{background:var(--vmu)}.tl-dot.pendingipt{background:var(--ipt)}
 .tl-dot.recapsent{background:var(--recap)}.tl-dot.agreementissued{background:var(--agr)}
 .tl-dot.todrop{background:var(--todrop)}.tl-dot.dropout{background:var(--dropout)}
-.tl-dot.paymentreceived{background:var(--payrcvd)}
+.tl-dot.paymentreceived{background:var(--payrcvd)}.tl-dot.renewal{background:var(--renewal)}
 .tl-dot.note{background:#9097b8}
 .badge.approved{background:var(--appr-bg);color:#065F46}
 .badge.rejected{background:var(--rej-bg);color:#991B1B}
@@ -307,6 +309,13 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
             <tbody id="finish-line-tbody"><tr class="loading-row"><td colspan="8">No agreements issued yet</td></tr></tbody>
           </table></div>
         </div>
+        <div id="renewals-section" style="display:none;margin-top:24px">
+          <div class="sh"><span class="st">🔄 Renewals</span><span class="sa" onclick="showView('applications')">View all →</span></div>
+          <div class="tc tc-scroll"><table>
+            <thead><tr><th>R#</th><th>Applicant</th><th>Unit</th><th>Move-in</th><th>Move-out</th><th>Agreement Date</th><th>Payment Due</th><th>Remarks</th></tr></thead>
+            <tbody id="renewals-tbody"><tr class="loading-row"><td colspan="8">No renewals yet</td></tr></tbody>
+          </table></div>
+        </div>
       </div>
     </div>
 
@@ -333,6 +342,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
               <option value="To Drop">To Drop</option>
               <option value="Drop Out ($500)">Drop Out ($500)</option>
               <option value="Payment Received/Finalized">Payment Received/Finalized</option>
+              <option value="Renewal">Renewal</option>
               <option value="Revived">Revived</option>
               <option value="Approved">Approved</option>
               <option value="Rejected">Rejected</option>
@@ -660,7 +670,7 @@ function showView(v){
   document.getElementById('view-'+v).classList.add('on');
   document.getElementById('nav-'+v).classList.add('active');
   if(v==='applications') renderTable();
-  if(v==='overview'){ renderRecent(); renderFinishLine(); }
+  if(v==='overview'){ renderRecent(); renderFinishLine(); renderRenewals(); }
 }
 
 // ── REFRESH ───────────────────────────────────────────────
@@ -674,6 +684,7 @@ function refreshAll(){
   document.getElementById('ov-appr-label').textContent  = 'Agreement Issued';
   document.getElementById('ov-rej-label').textContent   = 'To Drop / Drop Out';
   document.getElementById('finish-line-section').style.display = 'block';
+  document.getElementById('renewals-section').style.display = 'block';
 
   document.getElementById('ov-total').textContent = total;
   document.getElementById('ov-pend').textContent  = pend;
@@ -685,6 +696,7 @@ function refreshAll(){
   document.getElementById('pending-badge').textContent = pend;
   renderRecent();
   renderFinishLine();
+  renderRenewals();
   if(document.getElementById('view-applications').classList.contains('on')) renderTable();
 }
 
@@ -709,7 +721,26 @@ function flCell(ref, field, type){
   return `<td class="editable-cell" onclick="editCell(this,'${esc(ref)}','${field}','${type}')"><span class="cell-val${!val?' empty':''}">${val||'—'}</span></td>`;
 }
 
-function renderFinishLine(){
+function renderRenewals(){
+  const tbody = document.getElementById('renewals-tbody');
+  const renewed = apps.filter(a=>a.status==='Renewal');
+  if(!renewed.length){ tbody.innerHTML=`<tr class="loading-row"><td colspan="8">No renewals yet</td></tr>`; return; }
+  tbody.innerHTML = renewed.map(a=>{
+    const d = getNYData(a.ref_number);
+    const agrDate = d.agr_date || '';
+    const payDue  = d.payment_due || getPaymentDueDate(a.ref_number) || '';
+    return `<tr>
+      ${flCell(a.ref_number,'reservation_no','text')}
+      <td onclick="openPanel('${esc(a.ref_number)}')" style="cursor:pointer"><div class="td-name">${esc(a.first_name||'')} ${esc(a.last_name||'')}</div><div class="td-email">${esc(a.email||'')}</div></td>
+      <td><span class="td-unit">${esc(d.unit||'—')}</span></td>
+      <td><span class="td-date">${d.move_in?fmtDate(d.move_in):'—'}</span></td>
+      <td><span class="td-date">${d.move_out?fmtDate(d.move_out):'—'}</span></td>
+      <td class="editable-cell" onclick="editCell(this,'${esc(a.ref_number)}','agr_date','date')"><span class="cell-val${!agrDate?' empty':''}">${agrDate?fmtDate(agrDate):'—'}</span></td>
+      <td class="editable-cell" onclick="editCell(this,'${esc(a.ref_number)}','payment_due','date')"><span class="cell-val${!payDue?' empty':''}">${payDue?fmtDate(payDue):'—'}</span></td>
+      ${flCell(a.ref_number,'remarks','text')}
+    </tr>`;
+  }).join('');
+}
   const tbody = document.getElementById('finish-line-tbody');
   const agreed = apps.filter(a=>a.status==='Agreement Issued');
   if(!agreed.length){ tbody.innerHTML=`<tr class="loading-row"><td colspan="8">No agreements issued yet</td></tr>`; return; }
@@ -910,6 +941,7 @@ function openPanel(ref){
     ${a.status!=='To Drop'                  ? `<button class="btn" style="background:var(--todrop-bg);color:var(--todrop)" onclick="setStatus('${esc(ref)}','To Drop')">To Drop</button>` : ''}
     ${a.status!=='Drop Out ($500)'          ? `<button class="btn" style="background:var(--dropout-bg);color:var(--dropout)" onclick="setStatus('${esc(ref)}','Drop Out ($500)')">Drop Out ($500)</button>` : ''}
     ${a.status!=='Payment Received/Finalized' ? `<button class="btn" style="background:var(--payrcvd-bg);color:var(--payrcvd)" onclick="setStatus('${esc(ref)}','Payment Received/Finalized')">Payment Received/Finalized</button>` : ''}
+    ${a.status!=='Renewal' ? `<button class="btn" style="background:var(--renewal-bg);color:var(--renewal)" onclick="setStatus('${esc(ref)}','Renewal')">Renewal</button>` : ''}
     ${a.status!=='Pending Review'           ? `<button class="btn" style="background:#F4F2EE;color:var(--t2);border:1px solid var(--border)" onclick="setStatus('${esc(ref)}','Pending Review')">↩ Reset</button>` : ''}
     <button class="btn btn-rms" onclick="openRmsModal()">⬡ Create in RMS Cloud</button>
   `;
@@ -1057,6 +1089,7 @@ async function setStatus(ref, newStatus){
   refreshAll();
   openPanel(ref);
   renderFinishLine();
+  renderRenewals();
   toast('Status → ' + newStatus + ' ✓');
 }
 
@@ -1114,6 +1147,7 @@ function statusClass(s){
   if(s==='To Drop')           return 'todrop';
   if(s==='Drop Out ($500)')   return 'dropout';
   if(s==='Payment Received/Finalized')  return 'paymentreceived';
+  if(s==='Renewal')                     return 'renewal';
   if(s==='Revived')             return 'revived';
   return 'pending';
 }
