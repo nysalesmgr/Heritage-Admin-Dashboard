@@ -569,6 +569,7 @@ function pinKey(d){
       document.getElementById('app').classList.add('ready');
       document.getElementById('staff-indicator').textContent = '👤 ' + currentStaff;
       loadApps();
+      startAutoRefresh();
     } else {
       document.getElementById('pin-err').textContent = 'Incorrect PIN.';
       setTimeout(()=>{ pinBuffer=''; updateDots(); document.getElementById('pin-err').textContent=''; }, 800);
@@ -583,11 +584,21 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Backspace') pinDel();
 });
 
+let autoRefreshTimer = null;
+function startAutoRefresh(){
+  if(autoRefreshTimer) clearInterval(autoRefreshTimer);
+  autoRefreshTimer = setInterval(()=>{
+    if(!selectedRef){ loadApps(false); } // skip if a panel is open, to avoid disrupting edits
+  }, 60000);
+}
+function stopAutoRefresh(){ if(autoRefreshTimer){ clearInterval(autoRefreshTimer); autoRefreshTimer=null; } }
+
 function logout(){
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('staff-screen').style.display = 'none';
   document.getElementById('app').classList.remove('ready');
   pinBuffer=''; currentStaff=''; updateDots(); closePanel();
+  stopAutoRefresh();
 }
 function changePin(){
   const np = prompt('Enter new 4-digit PIN for ' + currentStaff + ':');
