@@ -449,6 +449,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
           <div><div class="il-l">Email</div><div class="il-v" id="t-email">—</div></div>
           <div><div class="il-l">Phone / WhatsApp</div><div class="il-v" id="t-phone">—</div></div>
           <div class="igrid full" style="grid-column:1/-1"><div class="il-l" id="t-college-label">University / College</div><div class="il-v" id="t-college">—</div></div>
+          <div class="igrid full" style="grid-column:1/-1"><div class="il-l">Source</div><div class="il-v" id="t-source">—</div></div>
         </div>
       </div>
       <div class="isec" id="sec-occ2">
@@ -1144,6 +1145,7 @@ function openPanel(ref){
   document.getElementById('t-email').innerHTML     = a.email ? `<a href="mailto:${esc(a.email)}">${esc(a.email)}</a>` : '—';
   document.getElementById('t-phone').textContent   = a.phone||'—';
   document.getElementById('t-college').textContent = a.college||'—';
+  document.getElementById('t-source').innerHTML = srcBadge(a._source);
 
   
   const has2 = a.first_name_2 || a.last_name_2;
