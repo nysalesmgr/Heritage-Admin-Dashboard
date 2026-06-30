@@ -470,6 +470,8 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
           <div><div class="il-l">Course</div><div class="il-v" id="t-course">—</div></div>
           <div><div class="il-l">Employer</div><div class="il-v" id="t-employer">—</div></div>
           <div><div class="il-l">How They Found Us</div><div class="il-v" id="t-referral">—</div></div>
+          <div><div class="il-l">Passport Number</div><div class="il-v" id="t-passport-num">—</div></div>
+          <div><div class="il-l">Passport Expiry</div><div class="il-v" id="t-passport-exp">—</div></div>
         </div>
       </div>
     </div>
@@ -666,18 +668,20 @@ function normalizeSupabaseFormsite(row){
     payment_plan:  '', monthly_rate: '', bedroom_choice: '',
     viewing_preference: '',
     first_name_2:  '', last_name_2: '', email_2: '', phone_2: '', college_2: '',
-    applicant_type: raw['I am a'] || '',
-    purpose:        raw['Purpose of Visit/Rental:'] || '',
-    address:        [raw['Address 1'],raw['City'],raw['State']].filter(Boolean).join(', '),
-    course:         raw['Course Name and Length of Course'] || '',
-    employer:       raw['Name of Employer:'] || '',
-    referral:       raw['Where did you find us?'] || '',
-    license_url:    raw['Driver License copies'] || '',
-    enrollment_url: raw['Letter of Enrolment/ Acceptance from School'] || '',
-    internship_url: raw['Internship Letter'] || '',
-    passport_1_url: raw['Passport'] || '',
-    i20_1_url:      raw['I-20'] || '',
-    visa_1_url:     raw['Visa'] || '',
+    applicant_type: raw['53'] || '',
+    purpose:        raw['56'] || '',
+    address:        [raw['4'],raw['6'],raw['7'],raw['8']].filter(Boolean).join(', '),
+    course:         raw['32'] || '',
+    employer:       raw['62'] || '',
+    referral:       raw['54'] || '',
+    passport_number: raw['22'] || '',
+    passport_expiry: raw['23'] || '',
+    license_url:    raw['65'] || '',
+    enrollment_url: raw['58'] || '',
+    internship_url: '',
+    passport_1_url: raw['57'] || '',
+    i20_1_url:      raw['58'] || '',
+    visa_1_url:     raw['59'] || '',
     _source:   source.includes('Domestic') ? 'Domestic' : 'International',
     _property: property,
   };
@@ -1161,6 +1165,8 @@ function openPanel(ref){
     document.getElementById('t-course').textContent   = a.course||'—';
     document.getElementById('t-employer').textContent = a.employer||'—';
     document.getElementById('t-referral').textContent = a.referral||'—';
+    document.getElementById('t-passport-num').textContent = a.passport_number||'—';
+    document.getElementById('t-passport-exp').textContent = a.passport_expiry ? fmtDate(a.passport_expiry) : '—';
   }
 
   
