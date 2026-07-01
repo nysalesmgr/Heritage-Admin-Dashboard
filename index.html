@@ -462,12 +462,6 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle;white-space:nowrap}
       <div><div class="il-l">Monthly Rate</div><input id="aa-rate" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="e.g. $3,200/mo"></div>
       <div><div class="il-l">Occupants</div><input id="aa-occ" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="1"></div>
       <div class="igrid full" style="grid-column:1/-1"><div class="il-l">Payment Plan</div><input id="aa-plan" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="e.g. Monthly"></div>
-      <div class="igrid full" style="grid-column:1/-1"><div class="il-l">Source</div>
-        <select id="aa-source" class="notes-area" style="min-height:0;padding:7px 10px">
-          <option value="International">International</option>
-          <option value="Domestic">Domestic</option>
-        </select>
-      </div>
     </div>
     <div class="l-err" id="aa-err" style="margin-bottom:10px"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
@@ -1107,7 +1101,6 @@ function appRow(a){
 
 function openAddApplication(){
   ['aa-first','aa-last','aa-email','aa-phone','aa-college','aa-apt','aa-movein','aa-moveout','aa-rate','aa-occ','aa-plan'].forEach(id=>{ document.getElementById(id).value=''; });
-  document.getElementById('aa-source').value='International';
   document.getElementById('aa-err').textContent='';
   document.getElementById('add-app-modal').style.display='flex';
 }
@@ -1148,8 +1141,6 @@ async function saveNewApplication(){
     body: JSON.stringify(payload)
   });
   if(res.ok){
-    const source = document.getElementById('aa-source').value;
-    setNYData(ref, { lead_source: source });
     closeAddApplication();
     await loadApps(false);
     toast('Application added ✓ — Ref: ' + ref);
