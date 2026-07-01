@@ -330,6 +330,7 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
         <div><div class="pt" id="apps-title">Applications</div><div class="ps-sub">All enquiries</div></div>
         <div style="display:flex;gap:8px">
           <button class="refresh-btn" onclick="loadApps(true)">↻ Refresh</button>
+          <button class="refresh-btn" id="add-app-btn" onclick="openAddApplication()" style="background:var(--navy);color:#FFF;border-color:var(--navy);display:none">+ Add Application</button>
           <button class="export-btn" onclick="exportCSV()">↓ Export CSV</button>
         </div>
       </div>
@@ -406,7 +407,30 @@ td{padding:11px 14px;font-size:13px;vertical-align:middle}
   </main>
 </div>
 
-<!-- RENEWAL MODAL -->
+<!-- ADD APPLICATION MODAL -->
+<div id="add-app-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;overflow-y:auto">
+  <div style="background:var(--card);border-radius:14px;padding:28px 32px;width:520px;max-width:95%;margin:20px auto">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;margin-bottom:20px">Add Application</div>
+    <div class="igrid" style="gap:12px;margin-bottom:12px">
+      <div><div class="il-l">First Name *</div><input id="aa-first" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="First name"></div>
+      <div><div class="il-l">Last Name *</div><input id="aa-last" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="Last name"></div>
+      <div><div class="il-l">Email *</div><input id="aa-email" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="Email"></div>
+      <div><div class="il-l">Phone</div><input id="aa-phone" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="Phone"></div>
+      <div class="igrid full" style="grid-column:1/-1"><div class="il-l">University / College</div><input id="aa-college" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="University or college"></div>
+      <div class="igrid full" style="grid-column:1/-1"><div class="il-l">Apartment</div><input id="aa-apt" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="e.g. Two Bedroom — 01"></div>
+      <div><div class="il-l">Move-in *</div><input id="aa-movein" type="date" class="notes-area" style="min-height:0;padding:7px 10px"></div>
+      <div><div class="il-l">Move-out *</div><input id="aa-moveout" type="date" class="notes-area" style="min-height:0;padding:7px 10px"></div>
+      <div><div class="il-l">Monthly Rate</div><input id="aa-rate" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="e.g. $3,200/mo"></div>
+      <div><div class="il-l">Occupants</div><input id="aa-occ" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="1"></div>
+      <div class="igrid full" style="grid-column:1/-1"><div class="il-l">Payment Plan</div><input id="aa-plan" class="notes-area" style="min-height:0;padding:7px 10px" placeholder="e.g. Monthly"></div>
+    </div>
+    <div class="l-err" id="aa-err" style="margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="closeAddApplication()" style="background:#F4F2EE;border:1px solid var(--border);border-radius:6px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif">Cancel</button>
+      <button onclick="saveNewApplication()" class="notes-save-btn" style="margin:0;padding:8px 20px;font-size:12px">Save Application</button>
+    </div>
+  </div>
+</div>
 <div id="renewal-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center">
   <div style="background:var(--card);border-radius:14px;padding:28px 32px;width:480px;max-width:95%">
     <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;margin-bottom:20px">Add Renewal</div>
@@ -615,8 +639,7 @@ function switchProperty(p){
   document.getElementById('sb-prop-label').textContent = p==='boston' ? 'Boston' : 'New York';
   document.getElementById('ov-title').textContent = p==='boston' ? 'Boston — Overview' : 'New York — Overview';
   document.getElementById('apps-title').textContent = p==='boston' ? 'Boston — Applications' : 'New York — Applications';
-  apps = [];
-  document.getElementById('recent-tbody').innerHTML = '<tr class="loading-row"><td colspan="7">Loading…</td></tr>';
+  document.getElementById('add-app-btn').style.display = p==='boston' ? 'inline-flex' : 'none';
   document.getElementById('apps-tbody').innerHTML = '<tr class="loading-row"><td colspan="7">Loading…</td></tr>';
   closePanel();
   loadApps();
@@ -894,6 +917,57 @@ async function deleteRenewal(id){
   renewalRows = renewalRows.filter(r=>r.id!==id);
   renderRenewals();
   toast('Renewal deleted');
+}
+
+function openAddApplication(){
+  ['aa-first','aa-last','aa-email','aa-phone','aa-college','aa-apt','aa-movein','aa-moveout','aa-rate','aa-occ','aa-plan'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('aa-err').textContent='';
+  document.getElementById('add-app-modal').style.display='flex';
+}
+function closeAddApplication(){ document.getElementById('add-app-modal').style.display='none'; }
+
+async function saveNewApplication(){
+  const first = document.getElementById('aa-first').value.trim();
+  const last  = document.getElementById('aa-last').value.trim();
+  const email = document.getElementById('aa-email').value.trim();
+  const movein = document.getElementById('aa-movein').value;
+  const moveout = document.getElementById('aa-moveout').value;
+  if(!first||!last||!email||!movein||!moveout){
+    document.getElementById('aa-err').textContent='Please fill in First Name, Last Name, Email, Move-in and Move-out.';
+    return;
+  }
+  // Generate ref number BOS-YYMMDDXX
+  const now = new Date();
+  const ref = 'BOS-' + now.getFullYear().toString().slice(2) + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0') + String(Math.floor(Math.random()*99)+1).padStart(2,'0');
+
+  const payload = {
+    ref_number:    ref,
+    first_name:    first,
+    last_name:     last,
+    email:         email,
+    phone:         document.getElementById('aa-phone').value.trim() || null,
+    college:       document.getElementById('aa-college').value.trim() || null,
+    apartment:     document.getElementById('aa-apt').value.trim() || null,
+    start_date:    movein,
+    end_date:      moveout,
+    monthly_rate:  document.getElementById('aa-rate').value.trim() || null,
+    occupants:     document.getElementById('aa-occ').value.trim() || '1',
+    payment_plan:  document.getElementById('aa-plan').value.trim() || null,
+    status:        'Pending Review'
+  };
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/applications`, {
+    method:'POST', headers:{...SB_HEADERS,'Prefer':'return=minimal'},
+    body: JSON.stringify(payload)
+  });
+  if(res.ok){
+    closeAddApplication();
+    await loadApps(false);
+    toast('Application added ✓ — Ref: ' + ref);
+  } else {
+    const err = await res.text();
+    document.getElementById('aa-err').textContent = 'Error saving: ' + err;
+  }
 }
 
 function openAddRenewal(){
