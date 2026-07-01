@@ -724,7 +724,7 @@ async function insertNote(ref, text){
 }
 async function fetchHistory(ref){
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/staff_history?ref_number=eq.${encodeURIComponent(ref)}&order=created_at.asc`, { headers: SB_HEADERS });
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/staff_history?ref_number=eq.${encodeURIComponent(ref)}&order=created_at.desc`, { headers: SB_HEADERS });
     if(res.ok) return await res.json();
   }catch(e){}
   return [];
