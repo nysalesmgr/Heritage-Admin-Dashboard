@@ -1497,7 +1497,7 @@ function openPanel(ref){
         <div class="tl-item">
           <div class="tl-dot ${h.entry_type==='note'?'note':h.entry_type==='field'?'field':statusClass(h.content)}"></div>
           <div>
-            <div class="tl-t">${esc(h.content)}</div>
+            <div class="tl-t" style="white-space:pre-wrap">${esc(h.content)}</div>
             <div class="tl-d">${fmtDateTime(h.created_at)} · <strong>${esc(h.staff_name)}</strong></div>
           </div>
         </div>`).join('');
@@ -1572,7 +1572,7 @@ async function saveNotes(){
   document.getElementById('tl-list').innerHTML = histEntries.map(h=>`
     <div class="tl-item">
       <div class="tl-dot ${h.entry_type==='note'?'note':h.entry_type==='field'?'field':statusClass(h.content)}"></div>
-      <div><div class="tl-t">${esc(h.content)}</div>
+      <div><div class="tl-t" style="white-space:pre-wrap">${esc(h.content)}</div>
       <div class="tl-d">${fmtDateTime(h.created_at)} · <strong>${esc(h.staff_name)}</strong></div></div>
     </div>`).join('');
   toast('Note saved ✓');
