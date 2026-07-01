@@ -593,6 +593,7 @@ function pinKey(d){
       document.getElementById('staff-screen').style.display = 'none';
       document.getElementById('app').classList.add('ready');
       document.getElementById('staff-indicator').textContent = '👤 ' + currentStaff;
+      document.getElementById('add-app-btn').style.display = 'inline-flex';
       loadApps();
       startAutoRefresh();
     } else {
